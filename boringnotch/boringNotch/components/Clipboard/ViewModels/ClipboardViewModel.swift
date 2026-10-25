@@ -78,6 +78,29 @@ final class ClipboardViewModel: ObservableObject {
         store.imageURL(for: fileName)
     }
 
+    // MARK: - Images for the list
+
+    private let imageCache = NSCache<NSString, NSImage>()
+
+    /// The entry's thumbnail, loaded once from disk.
+    func thumbnail(for entry: ClipboardEntry) -> NSImage? {
+        guard let fileName = entry.thumbFile ?? entry.imageFile else { return nil }
+        if let cached = imageCache.object(forKey: fileName as NSString) { return cached }
+        guard let image = NSImage(contentsOf: store.imageURL(for: fileName)) else { return nil }
+        imageCache.setObject(image, forKey: fileName as NSString)
+        return image
+    }
+
+    /// Icon of the app the copy came from.
+    func sourceAppIcon(for entry: ClipboardEntry) -> NSImage? {
+        guard let bundleID = entry.sourceAppBundleID else { return nil }
+        let key = "app:\(bundleID)" as NSString
+        if let cached = imageCache.object(forKey: key) { return cached }
+        guard let icon = LauncherItemInfo.appIcon(bundleID: bundleID) else { return nil }
+        imageCache.setObject(icon, forKey: key)
+        return icon
+    }
+
     private func reload() {
         entries = store.entries
     }

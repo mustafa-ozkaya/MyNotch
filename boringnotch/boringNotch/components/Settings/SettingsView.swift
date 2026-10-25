@@ -62,6 +62,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Launcher") {
                     Label("Launcher", systemImage: "square.grid.2x2")
                 }
+                NavigationLink(value: "Clipboard") {
+                    Label("Clipboard", systemImage: "doc.on.clipboard")
+                }
                 NavigationLink(value: "Shortcuts") {
                     Label("Shortcuts", systemImage: "keyboard")
                 }
@@ -98,6 +101,8 @@ struct SettingsView: View {
                     Shelf()
                 case "Launcher":
                     LauncherSettingsView()
+                case "Clipboard":
+                    ClipboardSettingsView()
                 case "Shortcuts":
                     Shortcuts()
                 case "Extensions":

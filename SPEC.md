@@ -158,6 +158,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
 - `ViewModels/ClipboardViewModel.swift`: publishes `entries`, `accessDenied`, and `copiedEntryID` (for the transient "Copied" state).
 - `Views/ClipboardView.swift`: vertical `ScrollView` + `LazyVStack` of rows: kind icon / thumbnail, a 2-line truncated preview (files: first file name plus "+N more"), relative time, source app icon. Hover shows a trash button; the context menu has "Copy" and "Delete". Clicking copies, shows a checkmark and "Copied" for ~0.8 s, then closes the notch.
 - Settings: Clipboard section in the new Launcher pane or its own `NavigationLink(value: "Clipboard")` pane (`ClipboardSettingsView.swift`): "Show Clipboard tab" toggle, history-limit stepper (10–500), and the `KeyboardShortcuts.Recorder("Open Clipboard:", name: .clipboardHistoryPanel)`.
+  - As built (step 9): own "Clipboard" pane after Launcher; stepper moves in steps of 10 and shows "Saved now: N items". The Recorder is added in step 10. The denied state's "Open Settings" opens Privacy & Security (`x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension`); there's no documented link straight to "Paste from Other Apps". Thumbnails and source-app icons are cached in `ClipboardViewModel`.
 
 ### Hotkey
 - `boringNotchApp.swift` (next to `toggleNotchOpen` at ~line 368): `KeyboardShortcuts.onKeyDown(for: .clipboardHistoryPanel)` sets `coordinator.currentView = .clipboard` and opens the notch on the active screen, reusing the same open path as `toggleNotchOpen`. Does nothing if `showClipboardTab` is false.
@@ -213,6 +214,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
 - Notch tab turned off while it's selected → `currentView` resets to `.home`.
 - First clipboard read triggers the macOS pasteboard access alert → if the user denies it (`accessBehavior == .alwaysDeny`), the Clipboard tab shows an empty state: "MyNotch can't read the clipboard. Allow it in System Settings › Privacy & Security › Paste from Other Apps." with an "Open Settings" button. Copy-back still works.
 - Empty history → "Nothing copied yet. Copy something and it'll show up here."
+- Scrolling the Clipboard list → must not close the notch. boring.notch's swipe-up-to-close gesture is the same motion as scrolling down, so `handleUpGesture` in `ContentView.swift` skips it while `currentView == .clipboard` (as it already did for the calendar). Found in manual testing.
 - Empty launcher config → "No shortcuts yet" plus an "Open Launcher Settings" button.
 - Concealed/transient copies (1Password, Keychain) → never recorded.
 - Apple's Passwords app sets **no** nspasteboard.org marker (found in manual test C2; it only clears the clipboard later). Copies made while the frontmost app's bundle ID starts with `com.apple.Passwords` or `com.apple.keychainaccess` are never recorded (`ClipboardContentRules.ignoredSourceAppPrefixes`).
