@@ -335,6 +335,7 @@
 		AA1000000000000000000003 /* MyNotchTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = MyNotchTests; sourceTree = "<group>"; };
 		AA2000000000000000000001 /* Launcher */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Launcher; sourceTree = "<group>"; };
 		AA2000000000000000000002 /* Clipboard */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Clipboard; sourceTree = "<group>"; };
+		AA2000000000000000000003 /* WindowSnap */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = WindowSnap; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -506,6 +507,7 @@
 			children = (
 				AA2000000000000000000001 /* Launcher */,
 				AA2000000000000000000002 /* Clipboard */,
+				AA2000000000000000000003 /* WindowSnap */,
 				B141C23B2CA5F50900AC8CC8 /* Onboarding */,
 				B1C448992C97375A001F0858 /* Tips */,
 				14C08BB72C8DE49E000F8AA0 /* Calendar */,
@@ -823,6 +825,7 @@
 				112FB72F2CCF12CC0015238C /* private */,
 				AA2000000000000000000001 /* Launcher */,
 				AA2000000000000000000002 /* Clipboard */,
+				AA2000000000000000000003 /* WindowSnap */,
 			);
 			name = boringNotch;
 			packageProductDependencies = (

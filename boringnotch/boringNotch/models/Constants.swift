@@ -77,7 +77,8 @@ extension Defaults.Keys {
     
     // MARK: Behavior
     static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)
-    static let enableHaptics = Key<Bool>("enableHaptics", default: true)
+    // MyNotch: off by default (upstream: on); the trackpad tap on hover felt like an unwanted click.
+    static let enableHaptics = Key<Bool>("enableHaptics", default: false)
     static let openNotchOnHover = Key<Bool>("openNotchOnHover", default: true)
     static let extendHoverArea = Key<Bool>("extendHoverArea", default: false)
     static let notchHeightMode = Key<WindowHeightMode>(

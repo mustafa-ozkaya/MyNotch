@@ -177,6 +177,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
   }
   ```
   - Halves use integral widths (`floor`); the right half takes the remainder so the two halves exactly cover `visibleFrame`.
+  - As built (step 12): cases are ordered `leftHalf, fill, rightHalf` so `allCases` matches the panel's left-to-right order. `SnapGeometry` also has `cocoaRect(fromAX:)` (inverse) and `frameMatches(_:target:tolerance:)` (the 2 pt check). Tests compare rects with `equalTo`, because upstream `boringNotchApp.swift` declares a public `CGRect ==` that makes `==` ambiguous.
 - `Models/SnapGeometry.swift` (pure, unit-tested):
   - `func axRect(fromCocoa rect: CGRect, primaryScreenHeight: CGFloat) -> CGRect`: AX uses a top-left origin relative to the primary screen; `y = primaryScreenHeight - rect.maxY`.
   - `func zone(at point: CGPoint, zones: [SnapLayout: CGRect]) -> SnapLayout?`: which target the cursor is over (screen coordinates).
