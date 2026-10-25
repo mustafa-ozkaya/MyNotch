@@ -175,6 +175,8 @@ extension Defaults.Keys {
     static let showLauncherTab = Key<Bool>("showLauncherTab", default: true)
     static let showClipboardTab = Key<Bool>("showClipboardTab", default: true)
     static let launcherConfig = Key<LauncherConfig>("launcherConfig", default: .empty)
+    /// Maximum clipboard history entries (Settings range 10–500).
+    static let clipboardHistoryLimit = Key<Int>("clipboardHistoryLimit", default: 50)
     
     // MARK: Calendar
     static let calendarSelectionState = Key<CalendarSelectionState>("calendarSelectionState", default: .all)

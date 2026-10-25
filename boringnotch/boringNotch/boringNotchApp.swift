@@ -84,6 +84,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             screenUnlockedObserver = nil
         }
         MusicManager.shared.destroy()
+        ClipboardViewModel.shared.shutDown()
         cleanupDragDetectors()
         cleanupWindows()
         XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
@@ -422,6 +423,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         setupDragDetectors()
+
+        // Clipboard history: monitors the pasteboard while the Clipboard tab is enabled.
+        ClipboardViewModel.shared.activate()
 
         if coordinator.firstLaunch {
             DispatchQueue.main.async {

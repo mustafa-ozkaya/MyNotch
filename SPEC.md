@@ -145,10 +145,12 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
   - `func insert(_ candidate: ClipboardCandidate) -> ClipboardEntry?`: applies size caps (returns nil if exceeded), dedupes by `contentHash` (an existing entry moves to the top with a new date), prepends, enforces `limit` (evicted entries' image files are deleted), saves.
   - `func delete(id:)` (also removes image files), `func setLimit(_:)` (trims immediately), `func load()`, `func save()` (atomic write, done off the main thread).
   - Corrupt or missing `history.json` → start empty and rename the bad file to `history.corrupt.json`.
+  - As built: `ClipboardCandidate { content: .text / .image(png:thumbnailPNG:) / .files([String]), sourceAppBundleID, date }`; the monitor makes the PNG and thumbnail, so the store needs no AppKit. Hash = SHA-256 of kind + content. Empty/whitespace text is rejected too. All disk writes and deletes run in order on one background queue; `flush()` waits for them (tests, app quit). Image files no entry refers to are deleted on load.
 - `Services/ClipboardMonitor.swift` (`@MainActor`):
   - A `Task` loop with `try await Task.sleep(for: .milliseconds(500))` (no Combine). Reads `NSPasteboard.general.changeCount` and only reads contents when it changed.
   - Ignores a change if: the types include concealed/transient/auto-generated markers; or `changeCount == lastSelfWriteChangeCount` (our own copy-back, so no re-insert loop).
-  - Picks one kind in priority order: file URLs (`readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])`) → image (`NSImage` / `.png` / `.tiff`, converted to PNG) → string (`.string`; rich text falls back to its plain string). Builds a `ClipboardCandidate` and calls `store.insert`.
+  - Picks one kind in priority order: file URLs (`readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])`) → string (`.string`; RTF/HTML fall back to their plain string) → image (`.png` / `.tiff` / `NSImage`, converted to PNG off the main thread with ImageIO, plus a 160 px thumbnail). **Changed from the original file → image → text:** Word/Excel/Pages/Keynote put a picture of the selection next to copied text, so image-first would save text copies as images. If the text is empty (e.g. a browser's "Copy Image" adds an `<img>` HTML tag), the image is used instead. Builds a `ClipboardCandidate` and calls `store.insert`. Pure rules live in `ClipboardContentRules` (`shouldIgnore(types:)`, `readOrder(types:)`, `pngAndThumbnail`).
+  - `accessBehavior` exists from macOS 15.4; on older systems access is treated as allowed. Monitoring skips whatever was on the clipboard when it starts. Copy-back uses `store.moveToTop(id:)` rather than re-inserting.
   - `sourceAppBundleID` = `NSWorkspace.shared.frontmostApplication?.bundleIdentifier` at detection time (shown as a small app icon).
   - `start()` / `stop()`. Started at launch if `showClipboardTab`; observes the toggle (`Defaults.updates(.showClipboardTab)` async sequence) to start or stop.
   - Pasteboard privacy: before reading, check `NSPasteboard.general.accessBehavior`. If `.alwaysDeny`, don't read; publish `accessDenied = true`.
@@ -213,6 +215,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
 - Empty history → "Nothing copied yet. Copy something and it'll show up here."
 - Empty launcher config → "No shortcuts yet" plus an "Open Launcher Settings" button.
 - Concealed/transient copies (1Password, Keychain) → never recorded.
+- Apple's Passwords app sets **no** nspasteboard.org marker (found in manual test C2; it only clears the clipboard later). Copies made while the frontmost app's bundle ID starts with `com.apple.Passwords` or `com.apple.keychainaccess` are never recorded (`ClipboardContentRules.ignoredSourceAppPrefixes`).
 - Copying the same content again → existing entry moves to the top, no duplicate.
 - Our own copy-back → not re-inserted by the monitor (`lastSelfWriteChangeCount`).
 - Text > 1 MB or image > 10 MB → skipped silently (logged).
@@ -295,7 +298,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
 
 ## Open questions
 - Final app name and bundle ID. "MyNotch" / `com.mustafaozkaya.mynotch` is a placeholder (owner: Mustafa; decide before step 1 ideally, since renaming later resets defaults and permissions).
-- Whether reading `changeCount` alone triggers the pasteboard privacy alert on the current macOS version. Expected not to; confirm during step 8 (owner: implementer).
+- ~~Whether reading `changeCount` alone triggers the pasteboard privacy alert.~~ Resolved in step 8 (2026-10-25, macOS 27): no alert appeared at all, neither at launch nor when MyNotch read copied content. Manual check C1's "alert appears" part doesn't apply on this system; C9 (deny in System Settings) still applies if MyNotch shows up in that pane.
 - Whether Accessibility trust granted to MyNotch covers AX calls made from the bundled XPC helper (TCC usually attributes them to the responsible app). Confirm in step 13; if not, the helper may need to appear as its own entry in Accessibility settings (owner: implementer).
 - Whether macOS's own top-edge drag behavior (tiling / Mission Control) fires reliably when releasing at the notch, and whether the 100 ms delay is enough. Confirm in step 15 (owner: implementer).
-- Upstream merge strategy (regular `git merge upstream/main` vs. occasional cherry-picks). Deferred; add an `upstream` remote and keep new code in new folders to minimize conflicts.
+- ~~Upstream merge strategy.~~ Resolved 2026-10-25: MyNotch is a standalone repo with no upstream link or history (boring.notch's `.git` is backed up outside the repo at `../MyNotch-boringnotch-upstream-git-backup`). Upstream fixes, if ever wanted, are copied by hand. GPL-3.0 `LICENSE` kept.
