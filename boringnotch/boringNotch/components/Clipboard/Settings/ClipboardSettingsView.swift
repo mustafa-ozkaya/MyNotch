@@ -4,6 +4,7 @@
 //
 
 import Defaults
+import KeyboardShortcuts
 import SwiftUI
 
 /// Settings pane for the Clipboard tab: on/off and history size.
@@ -23,6 +24,15 @@ struct ClipboardSettingsView: View {
                 Text("General")
             } footer: {
                 Text("When the tab is off, MyNotch stops reading the clipboard.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                KeyboardShortcuts.Recorder("Open Clipboard:", name: .clipboardHistoryPanel)
+            } header: {
+                Text("Shortcut")
+            } footer: {
+                Text("Opens the notch on the Clipboard tab from any app; press it again to close. It takes over this key combination in every app, so pick another one if an app you use needs it.")
                     .foregroundStyle(.secondary)
             }
 

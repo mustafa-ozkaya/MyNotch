@@ -162,6 +162,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
 
 ### Hotkey
 - `boringNotchApp.swift` (next to `toggleNotchOpen` at ~line 368): `KeyboardShortcuts.onKeyDown(for: .clipboardHistoryPanel)` sets `coordinator.currentView = .clipboard` and opens the notch on the active screen, reusing the same open path as `toggleNotchOpen`. Does nothing if `showClipboardTab` is false.
+  - As built (step 10): screen lookup shared with `toggleNotchOpen` via `viewModelForMouseScreen()`. Pressing it while the Clipboard tab is showing closes the notch. Unlike `toggleNotchOpen` there's no 3 s auto-close, so there's time to pick an entry. The Recorder lives in Settings › Clipboard › Shortcut.
 
 ### Window Snapping. New folder `components/WindowSnap/`
 - `Models/SnapLayout.swift`
@@ -257,6 +258,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
 9. **Clipboard tab UI and Settings.** Rows, hover delete, context menu, "Copied" feedback, close notch, empty and denied states, limit stepper, toggle. *Check:* manual C5–C9.
 10. **Hotkey.** Wire `clipboardHistoryPanel` and add its Recorder in Settings. *Check:* manual H1–H2.
 11. **Cleanup.** Update the `TipStore` "Clipboard Manager" tip copy if it no longer fits; add new strings to `Localizable.xcstrings` (English only). *Check:* build with no new warnings; all tests pass.
+    - Done 2026-10-25: tip copy rewritten (the tips view itself is unused upstream); onboarding/welcome text renamed to MyNotch; About page credits boring.notch (GPL-3.0) and its GitHub button is labelled "boring.notch on GitHub"; `NotchViews` made `Sendable`. No new warnings in MyNotch code (remaining warnings are upstream's). `Localizable.xcstrings` is filled in by Xcode's automatic string extraction the first time the project is built in the Xcode IDE (command-line builds don't update it); until then English strings show as-is, which is all an English-only app needs.
 12. **Snap models.** `SnapLayout`, `SnapGeometry`. *Check:* unit tests (see Verification) pass.
 13. **Helper window API.** New XPC protocol methods (both copies), helper implementation, `XPCHelperClient` async wrappers. *Check:* build; temporary debug call snaps the frontmost window to the left half (removed after).
 14. **Window drag detection.** `WindowDragDetector`, wiring in `boringNotchApp.swift`, the `windowSnappingEnabled` key, start/stop on toggle and Accessibility changes. *Check:* manual W1, W6, W7 (logged enter/exit/drop events).

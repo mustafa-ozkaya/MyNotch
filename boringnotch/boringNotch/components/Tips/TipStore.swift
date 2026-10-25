@@ -32,12 +32,12 @@ struct HUDsTip: Tip {
 
 struct CBTip: Tip {
     var title: Text {
-        Text("Boost your productivity with Clipboard Manager")
+        Text("Get back anything you copied")
     }
     
     
     var message: Text? {
-        Text("Easily copy, store, and manage your most-used content. Upgrade now for advanced features like multi-item storage and quick access!")
+        Text("The Clipboard tab keeps your recent copies. Press ⇧⌘C, click an item to copy it again, then paste with ⌘V.")
     }
     
     

@@ -24,7 +24,7 @@ public enum NotchState {
     case open
 }
 
-public enum NotchViews {
+public enum NotchViews: Sendable {
     case home
     case shelf
     case launcher

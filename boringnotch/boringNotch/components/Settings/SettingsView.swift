@@ -895,7 +895,7 @@ struct About: View {
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 18)
-                            Text("GitHub")
+                            Text("boring.notch on GitHub")
                         }
                         .contentShape(Rectangle())
                     }
@@ -905,7 +905,7 @@ struct About: View {
             }
             VStack(spacing: 0) {
                 Divider()
-                Text("Made with 🫶🏻 by not so boring not.people")
+                Text("MyNotch is a personal fork of boring.notch by The Boring Team, licensed under GPL-3.0.")
                     .foregroundStyle(.secondary)
                     .padding(.top, 5)
                     .padding(.bottom, 7)

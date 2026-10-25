@@ -221,6 +221,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         detector.startMonitoring()
     }
 
+    /// The notch on the screen under the mouse (with "Show on all displays"), otherwise the main notch.
+    private func viewModelForMouseScreen() -> BoringViewModel {
+        guard Defaults[.showOnAllDisplays] else { return vm }
+        let mouseLocation = NSEvent.mouseLocation
+        for screen in NSScreen.screens where screen.frame.contains(mouseLocation) {
+            if let uuid = screen.displayUUID, let screenViewModel = viewModels[uuid] {
+                return screenViewModel
+            }
+        }
+        return vm
+    }
+
     private func handleDragEntersNotchRegion(onScreen screen: NSScreen) {
         guard let uuid = screen.displayUUID else { return }
         
@@ -371,20 +383,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Task { [weak self] in
                 guard let self = self else { return }
 
-                let mouseLocation = NSEvent.mouseLocation
-
-                var viewModel = self.vm
-
-                if Defaults[.showOnAllDisplays] {
-                    for screen in NSScreen.screens {
-                        if screen.frame.contains(mouseLocation) {
-                            if let uuid = screen.displayUUID, let screenViewModel = self.viewModels[uuid] {
-                                viewModel = screenViewModel
-                                break
-                            }
-                        }
-                    }
-                }
+                let viewModel = self.viewModelForMouseScreen()
 
                 self.closeNotchTask?.cancel()
                 self.closeNotchTask = nil
@@ -409,6 +408,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         viewModel.close()
                     }
                 }
+            }
+        }
+
+        // ⇧⌘C by default: open the notch on the Clipboard tab, or close it if it's already showing.
+        // No auto-close timer: picking an entry closes the notch, as does moving the mouse away.
+        KeyboardShortcuts.onKeyDown(for: .clipboardHistoryPanel) { [weak self] in
+            guard let self, Defaults[.showClipboardTab] else { return }
+            let viewModel = self.viewModelForMouseScreen()
+
+            self.closeNotchTask?.cancel()
+            self.closeNotchTask = nil
+
+            if viewModel.notchState == .open && self.coordinator.currentView == .clipboard {
+                viewModel.close()
+            } else {
+                self.coordinator.currentView = .clipboard
+                viewModel.open()
             }
         }
 
