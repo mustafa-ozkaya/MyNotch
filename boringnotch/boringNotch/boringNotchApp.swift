@@ -16,7 +16,6 @@ import SwiftUI
 struct DynamicNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Default(.menubarIcon) var showMenuBarIcon
-    @Default(.windowSnappingEnabled) var windowSnappingEnabled
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
@@ -39,14 +38,6 @@ struct DynamicNotchApp: App {
                 }
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
-            #if DEBUG
-            // TEMPORARY (spec step 14): stands in for the Settings toggle until step 16.
-            Toggle("Debug: Window Snapping Enabled", isOn: $windowSnappingEnabled)
-                .onChange(of: windowSnappingEnabled) { _, enabled in
-                    guard enabled else { return }
-                    Task { _ = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true) }
-                }
-            #endif
             Divider()
             Button("Restart MyNotch") {
                 ApplicationRelauncher.restart()

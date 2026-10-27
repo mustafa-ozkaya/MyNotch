@@ -65,6 +65,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Clipboard") {
                     Label("Clipboard", systemImage: "doc.on.clipboard")
                 }
+                NavigationLink(value: "Window Snapping") {
+                    Label("Window Snapping", systemImage: "rectangle.split.2x1")
+                }
                 NavigationLink(value: "Shortcuts") {
                     Label("Shortcuts", systemImage: "keyboard")
                 }
@@ -103,6 +106,8 @@ struct SettingsView: View {
                     LauncherSettingsView()
                 case "Clipboard":
                     ClipboardSettingsView()
+                case "Window Snapping":
+                    WindowSnapSettingsView()
                 case "Shortcuts":
                     Shortcuts()
                 case "Extensions":

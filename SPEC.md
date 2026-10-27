@@ -277,6 +277,8 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
       - The step 13 debug snap menu item and `WindowSnapDebug.swift` are removed. The "Debug: Window Snapping Enabled" toggle stays until step 16.
     - Manually checked: W2, W3 (Safari, all three layouts), W4, W5 (VS Code, Finder, Claude). W8 (external display) not run yet.
 16. **Settings pane.** `WindowSnapSettingsView` with toggle, Accessibility status, tips. *Check:* manual W9–W10.
+    - Done 2026-10-27: the pane is at `components/WindowSnap/Settings/WindowSnapSettingsView.swift` (a folder-synchronized group, like Clipboard's settings) rather than `components/Settings/`. The status row checks `isAccessibilityAuthorized()` every 2 s while the pane is open, instead of using the shared monitor that the HUD pane starts and stops. The Mission Control tip names the Desktop & Dock setting and mentions shelf drags. The temporary "Debug: Window Snapping Enabled" menu toggle is removed.
+    - Manually checked: W10. W9 skipped at the user's request (it needs Accessibility revoked and granted again).
 17. **Cleanup.** New strings in `Localizable.xcstrings`. *Check:* build with no new warnings; all tests pass.
 
 ## Verification
