@@ -42,6 +42,8 @@ private enum WindowRegistry {
 extension BoringNotchXPCHelper {
     /// Upper bound for each Accessibility call, so an unresponsive app can't stall a drag.
     private static let messagingTimeout: Float = 0.5
+    /// Height of the band at the top of a window that counts as its title bar.
+    private static let titleBarBand: Double = 40
 
     @objc func windowUnderPoint(_ x: Double, _ y: Double, with reply: @escaping (NSNumber?, [NSNumber]?) -> Void) {
         guard AXIsProcessTrusted() else {
@@ -72,6 +74,14 @@ extension BoringNotchXPCHelper {
             return
         }
         guard let frame = Self.frame(of: window) else {
+            reply(nil, nil)
+            return
+        }
+        // Windows are moved by their title bar. Clicks in the content area (text selection,
+        // file drags) are ignored. Tall toolbars like Safari's extend past the band, so a hit
+        // inside the window's toolbar counts too.
+        let inTitleBarBand = y >= Double(frame.minY) && y <= Double(frame.minY) + Self.titleBarBand
+        guard inTitleBarBand || Self.isInToolbar(hit, of: window) else {
             reply(nil, nil)
             return
         }
@@ -132,6 +142,20 @@ extension BoringNotchXPCHelper {
             }
         }
         return nil
+    }
+
+    /// True if the element is, or sits inside, a toolbar of the given window.
+    private static func isInToolbar(_ element: AXUIElement, of window: AXUIElement) -> Bool {
+        var current = element
+        for _ in 0..<32 {
+            if CFEqual(current, window) { return false }
+            if stringAttribute(current, kAXRoleAttribute) == (kAXToolbarRole as String) { return true }
+            var parent: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(current, kAXParentAttribute as CFString, &parent) == .success,
+                  let parent, CFGetTypeID(parent) == AXUIElementGetTypeID() else { return false }
+            current = parent as! AXUIElement
+        }
+        return false
     }
 
     private static func frame(of window: AXUIElement) -> CGRect? {

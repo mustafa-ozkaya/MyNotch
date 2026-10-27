@@ -102,6 +102,30 @@ struct SnapGeometryTests {
         #expect(!SnapGeometry.isWindowDrag(startFrame: start, currentFrame: resized))
     }
 
+    @Test func resizeIsDetectedAndMoveIsNot() {
+        #expect(SnapGeometry.isResize(startFrame: start, currentFrame: CGRect(x: 100, y: 60, width: 800, height: 640)))
+        #expect(!SnapGeometry.isResize(startFrame: start, currentFrame: start.offsetBy(dx: 200, dy: 50)))
+        // Sub-point rounding from some apps isn't a resize.
+        #expect(!SnapGeometry.isResize(startFrame: start, currentFrame: CGRect(x: 140, y: 100, width: 800.5, height: 599.5)))
+    }
+
+    let regions = [
+        SnapNotchRegion(screenID: "main", rect: CGRect(x: 456, y: 782, width: 600, height: 200)),
+        // External display to the right of the main one.
+        SnapNotchRegion(screenID: "external", rect: CGRect(x: 2492, y: 1240, width: 600, height: 200)),
+    ]
+
+    @Test func notchRegionUnderThePointIsFound() {
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 950), in: regions)?.screenID == "main")
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 2800, y: 1400), in: regions)?.screenID == "external")
+    }
+
+    @Test func pointsOutsideEveryNotchRegionHaveNone() {
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 500), in: regions) == nil)
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 100, y: 950), in: regions) == nil)
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 950), in: []) == nil)
+    }
+
     @Test func frameMatchToleratesSmallDifferences() {
         let target = CGRect(x: 0, y: 37, width: 756, height: 875)
         #expect(SnapGeometry.frameMatches(CGRect(x: 1, y: 38, width: 755, height: 874), target: target))

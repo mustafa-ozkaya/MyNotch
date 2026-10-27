@@ -5,6 +5,14 @@
 
 import CoreGraphics
 
+/// The area at the top of a screen where dropping a dragged window opens the snap panel.
+struct SnapNotchRegion: Equatable {
+    /// `NSScreen.displayUUID` of the screen the region belongs to.
+    let screenID: String
+    /// Screen coordinates (Cocoa, bottom-left origin).
+    let rect: CGRect
+}
+
 /// Coordinate conversion and hit-testing for window snapping. Pure functions, unit-tested.
 enum SnapGeometry {
     /// Minimum distance the window's origin must move before a drag counts as a window move.
@@ -30,10 +38,19 @@ enum SnapGeometry {
 
     /// True if the window was moved (not resized): its origin moved far enough and its size stayed the same.
     static func isWindowDrag(startFrame: CGRect, currentFrame: CGRect) -> Bool {
-        let sizeUnchanged = abs(startFrame.width - currentFrame.width) <= sizeTolerance
-            && abs(startFrame.height - currentFrame.height) <= sizeTolerance
         let distance = hypot(currentFrame.minX - startFrame.minX, currentFrame.minY - startFrame.minY)
-        return sizeUnchanged && distance >= minimumDragDistance
+        return !isResize(startFrame: startFrame, currentFrame: currentFrame) && distance >= minimumDragDistance
+    }
+
+    /// True if the window's size changed, i.e. the gesture is resizing it rather than moving it.
+    static func isResize(startFrame: CGRect, currentFrame: CGRect) -> Bool {
+        abs(startFrame.width - currentFrame.width) > sizeTolerance
+            || abs(startFrame.height - currentFrame.height) > sizeTolerance
+    }
+
+    /// The notch region containing the point, if any. Points and rects are in screen coordinates.
+    static func notchRegion(at point: CGPoint, in regions: [SnapNotchRegion]) -> SnapNotchRegion? {
+        regions.first { $0.rect.contains(point) }
     }
 
     /// True if the final frame is within `tolerance` points of the target on every edge.

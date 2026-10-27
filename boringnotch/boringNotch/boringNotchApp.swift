@@ -16,6 +16,7 @@ import SwiftUI
 struct DynamicNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Default(.menubarIcon) var showMenuBarIcon
+    @Default(.windowSnappingEnabled) var windowSnappingEnabled
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
@@ -43,6 +44,12 @@ struct DynamicNotchApp: App {
             Button("Debug: Snap Window Under Mouse to Left Half (in 3 s)") {
                 Task { await WindowSnapDebug.snapWindowUnderMouseToLeftHalf() }
             }
+            // TEMPORARY (spec step 14): stands in for the Settings toggle until step 16.
+            Toggle("Debug: Window Snapping Enabled", isOn: $windowSnappingEnabled)
+                .onChange(of: windowSnappingEnabled) { _, enabled in
+                    guard enabled else { return }
+                    Task { _ = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true) }
+                }
             #endif
             Divider()
             Button("Restart MyNotch") {
@@ -182,40 +189,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupDragDetectors() {
         cleanupDragDetectors()
+        updateWindowSnapRegions()
 
         guard Defaults[.expandedDragDetection] else { return }
 
-        if Defaults[.showOnAllDisplays] {
-            for screen in NSScreen.screens {
-                setupDragDetectorForScreen(screen)
-            }
-        } else {
-            let preferredScreen: NSScreen? = window?.screen
-                ?? NSScreen.screen(withUUID: coordinator.selectedScreenUUID)
-                ?? NSScreen.main
-
-            if let screen = preferredScreen {
-                setupDragDetectorForScreen(screen)
-            }
+        for screen in screensWithNotchWindow() {
+            setupDragDetectorForScreen(screen)
         }
+    }
+
+    /// Every screen with "Show on all displays", otherwise just the one showing the notch.
+    private func screensWithNotchWindow() -> [NSScreen] {
+        if Defaults[.showOnAllDisplays] {
+            return NSScreen.screens
+        }
+        let preferredScreen: NSScreen? = window?.screen
+            ?? NSScreen.screen(withUUID: coordinator.selectedScreenUUID)
+            ?? NSScreen.main
+        return preferredScreen.map { [$0] } ?? []
+    }
+
+    /// The top-center area of the screen that an open notch would occupy.
+    private func notchRegion(for screen: NSScreen) -> CGRect {
+        let screenFrame = screen.frame
+        return CGRect(
+            x: screenFrame.midX - openNotchSize.width / 2,
+            y: screenFrame.maxY - openNotchSize.height,
+            width: openNotchSize.width,
+            height: openNotchSize.height
+        )
+    }
+
+    /// Window snapping watches the same regions as the shelf's drag detection, but regardless
+    /// of the "expanded drag detection" setting, which only applies to the shelf.
+    private func updateWindowSnapRegions() {
+        let regions = screensWithNotchWindow().compactMap { screen in
+            screen.displayUUID.map { SnapNotchRegion(screenID: $0, rect: notchRegion(for: screen)) }
+        }
+        WindowSnapController.shared.setNotchRegions(regions)
     }
 
     private func setupDragDetectorForScreen(_ screen: NSScreen) {
         guard let uuid = screen.displayUUID else { return }
-        
-        let screenFrame = screen.frame
-        let notchHeight = openNotchSize.height
-        let notchWidth = openNotchSize.width
-        
-        // Create notch region at the top-center of the screen where an open notch would occupy
-        let notchRegion = CGRect(
-            x: screenFrame.midX - notchWidth / 2,
-            y: screenFrame.maxY - notchHeight,
-            width: notchWidth,
-            height: notchHeight
-        )
-        
-        let detector = DragDetector(notchRegion: notchRegion)
+
+        let detector = DragDetector(notchRegion: notchRegion(for: screen))
         
         detector.onDragEntersNotchRegion = { [weak self] in
             Task { @MainActor in
@@ -445,6 +462,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         setupDragDetectors()
+
+        // Window snapping: watches for title-bar drags into the notch while the setting is on.
+        WindowSnapController.shared.activate()
 
         // Clipboard history: monitors the pasteboard while the Clipboard tab is enabled.
         ClipboardViewModel.shared.activate()

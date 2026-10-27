@@ -178,6 +178,10 @@ extension Defaults.Keys {
     static let launcherConfig = Key<LauncherConfig>("launcherConfig", default: .empty)
     /// Maximum clipboard history entries (Settings range 10–500).
     static let clipboardHistoryLimit = Key<Int>("clipboardHistoryLimit", default: 50)
+
+    // MARK: Window Snapping (MyNotch)
+    /// Off by default so users who never snap windows don't get an Accessibility prompt.
+    static let windowSnappingEnabled = Key<Bool>("windowSnappingEnabled", default: false)
     
     // MARK: Calendar
     static let calendarSelectionState = Key<CalendarSelectionState>("calendarSelectionState", default: .all)
