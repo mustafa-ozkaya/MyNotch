@@ -29,6 +29,8 @@ public enum NotchViews: Sendable {
     case shelf
     case launcher
     case clipboard
+    /// Snap targets shown while a window is dragged into the notch. Not a tab.
+    case windowSnap
 }
 
 enum SettingsEnum {

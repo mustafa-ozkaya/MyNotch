@@ -3,8 +3,7 @@
 //  boringNotch
 //
 //  Runs the window drag detector while "Enable window snapping" is on and Accessibility is
-//  granted, and stops it otherwise. Step 14 only logs the detector's events; the snap panel
-//  hooks in here in step 15.
+//  granted, and stops it otherwise. Forwards (and logs) its events to `WindowSnapViewModel`.
 //
 
 import AppKit
@@ -26,18 +25,25 @@ final class WindowSnapController {
     private let authorizationCheckInterval: Duration = .seconds(3)
 
     private init() {
+        let snap = WindowSnapViewModel.shared
         detector.onEnterNotch = { [logger] screenID in
             logger.notice("window drag entered notch on screen \(screenID, privacy: .public)")
+            snap.dragEntered(screenID: screenID)
+        }
+        detector.onMove = { point in
+            snap.dragMoved(to: point)
         }
         detector.onExitNotch = { [logger] in
             logger.notice("window drag exited notch")
+            snap.dragExited()
         }
         detector.onDrop = { [logger] point, screenID, window in
             logger.notice("window dropped in notch on screen \(screenID, privacy: .public) at \(point.debugDescription, privacy: .public), window frame \(window.frame.debugDescription, privacy: .public)")
-            XPCHelperClient.shared.releaseWindow(window)
+            snap.dropped(at: point, window: window)
         }
         detector.onCancel = { [logger] in
             logger.notice("window drag ended outside the notch")
+            snap.dragCancelled()
         }
     }
 

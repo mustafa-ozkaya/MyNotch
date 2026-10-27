@@ -120,7 +120,11 @@ struct ContentView: View {
                 mainLayout
                     .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
                     .conditionalModifier(true) { view in
-                        let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
+                        // MyNotch: quicker than upstream's 0.42 s spring; the window snap panel
+                        // opens mid-drag, so it's quicker still.
+                        let openAnimation = coordinator.currentView == .windowSnap
+                            ? Animation.spring(response: 0.24, dampingFraction: 0.86, blendDuration: 0)
+                            : Animation.spring(response: 0.3, dampingFraction: 0.82, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
                         
                         return view
@@ -353,12 +357,14 @@ struct ContentView: View {
                         LauncherView()
                     case .clipboard:
                         ClipboardView()
+                    case .windowSnap:
+                        SnapPanelView()
                     }
                 }
                 .transition(
                     .scale(scale: 0.8, anchor: .top)
                     .combined(with: .opacity)
-                    .animation(.smooth(duration: 0.35))
+                    .animation(.smooth(duration: coordinator.currentView == .windowSnap ? 0.2 : 0.25))
                 )
                 .zIndex(1)
                 .allowsHitTesting(vm.notchState == .open)
@@ -529,6 +535,7 @@ struct ContentView: View {
             
             guard vm.notchState == .closed,
                   !coordinator.sneakPeek.show,
+                  !WindowSnapViewModel.shared.suppressesHoverOpen,
                   Defaults[.openNotchOnHover] else { return }
             
             hoverTask = Task {
@@ -553,7 +560,9 @@ struct ContentView: View {
                         self.isHovering = false
                     }
                     
-                    if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !SharingStateManager.shared.preventNotchClose {
+                    // The snap panel opens and closes with the window drag, not with hover.
+                    if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !SharingStateManager.shared.preventNotchClose
+                        && self.coordinator.currentView != .windowSnap {
                         self.vm.close()
                     }
                 }

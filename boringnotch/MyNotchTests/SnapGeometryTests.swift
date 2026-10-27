@@ -109,21 +109,45 @@ struct SnapGeometryTests {
         #expect(!SnapGeometry.isResize(startFrame: start, currentFrame: CGRect(x: 140, y: 100, width: 800.5, height: 599.5)))
     }
 
-    let regions = [
-        SnapNotchRegion(screenID: "main", rect: CGRect(x: 456, y: 782, width: 600, height: 200)),
-        // External display to the right of the main one.
-        SnapNotchRegion(screenID: "external", rect: CGRect(x: 2492, y: 1240, width: 600, height: 200)),
-    ]
+    // Main screen 1512 x 982 with a 185 x 37 notch; external display to its right.
+    let main = SnapNotchRegion(
+        screenID: "main",
+        triggerRect: CGRect(x: 663, y: 945, width: 185, height: 37),
+        rect: CGRect(x: 436, y: 792, width: 640, height: 190)
+    )
+    let external = SnapNotchRegion(
+        screenID: "external",
+        triggerRect: CGRect(x: 2700, y: 1408, width: 185, height: 32),
+        rect: CGRect(x: 2472, y: 1250, width: 640, height: 190)
+    )
+    var regions: [SnapNotchRegion] { [main, external] }
 
-    @Test func notchRegionUnderThePointIsFound() {
-        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 950), in: regions)?.screenID == "main")
-        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 2800, y: 1400), in: regions)?.screenID == "external")
+    @Test func enteringNeedsTheNotchItself() {
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 960), current: nil, in: regions) == main)
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 2790, y: 1420), current: nil, in: regions) == external)
+        // Below the camera, inside the panel area but not the notch: no panel yet.
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 900), current: nil, in: regions) == nil)
+        // Beside the notch, under the menu bar.
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 500, y: 960), current: nil, in: regions) == nil)
     }
 
-    @Test func pointsOutsideEveryNotchRegionHaveNone() {
-        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 500), in: regions) == nil)
-        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 100, y: 950), in: regions) == nil)
-        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 950), in: []) == nil)
+    @Test func cursorPushedAgainstTheTopOfTheScreenIsInside() {
+        // y == 982 is the main screen's top edge, where a cursor stops when pushed up.
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 982), current: nil, in: regions) == main)
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 982), current: main, in: regions) == main)
+    }
+
+    @Test func onceInTheCursorCanMoveDownOntoThePanel() {
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 500, y: 820), current: main, in: regions) == main)
+    }
+
+    @Test func leavingThePanelAreaExits() {
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 700), current: main, in: regions) == nil)
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 756, y: 960), current: nil, in: []) == nil)
+    }
+
+    @Test func movingToAnotherScreensNotchSwitches() {
+        #expect(SnapGeometry.notchRegion(at: CGPoint(x: 2790, y: 1420), current: main, in: regions) == external)
     }
 
     @Test func frameMatchToleratesSmallDifferences() {

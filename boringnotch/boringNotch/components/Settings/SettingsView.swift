@@ -347,11 +347,11 @@ struct GeneralSettings: View {
             }
             Toggle("Remember last tab", isOn: $coordinator.openLastTabByDefault)
             if openNotchOnHover {
-                Slider(value: $minimumHoverDuration, in: 0...1, step: 0.1) {
+                Slider(value: $minimumHoverDuration, in: 0...1, step: 0.05) {
                     HStack {
                         Text("Hover delay")
                         Spacer()
-                        Text("\(minimumHoverDuration, specifier: "%.1f")s")
+                        Text("\(minimumHoverDuration, specifier: "%.2f")s")
                             .foregroundStyle(.secondary)
                     }
                 }

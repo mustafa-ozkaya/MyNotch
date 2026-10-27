@@ -181,7 +181,7 @@ final class WindowDragDetector {
     /// Reports entering or leaving a notch region during a confirmed drag.
     private func updateRegion(at point: CGPoint = NSEvent.mouseLocation) {
         guard case .confirmed = phase else { return }
-        let region = SnapGeometry.notchRegion(at: point, in: notchRegions)
+        let region = SnapGeometry.notchRegion(at: point, current: currentRegion, in: notchRegions)
         guard region != currentRegion else { return }
         if currentRegion != nil {
             onExitNotch?()

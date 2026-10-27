@@ -5,11 +5,14 @@
 
 import CoreGraphics
 
-/// The area at the top of a screen where dropping a dragged window opens the snap panel.
+/// Where a dragged window opens the snap panel on one screen. Screen coordinates (Cocoa, bottom-left origin).
 struct SnapNotchRegion: Equatable {
     /// `NSScreen.displayUUID` of the screen the region belongs to.
     let screenID: String
-    /// Screen coordinates (Cocoa, bottom-left origin).
+    /// Small area that opens the panel: the physical notch (where the cursor disappears),
+    /// or a notch-sized strip at the top of screens without one.
+    let triggerRect: CGRect
+    /// Area of the open panel. Once open, the panel stays open while the cursor is in here.
     let rect: CGRect
 }
 
@@ -48,9 +51,19 @@ enum SnapGeometry {
             || abs(startFrame.height - currentFrame.height) > sizeTolerance
     }
 
-    /// The notch region containing the point, if any. Points and rects are in screen coordinates.
-    static func notchRegion(at point: CGPoint, in regions: [SnapNotchRegion]) -> SnapNotchRegion? {
-        regions.first { $0.rect.contains(point) }
+    /// The notch region the cursor is in after moving to `point`. Entering needs the small trigger
+    /// area; once in, the region lasts until the cursor leaves its (larger) panel area.
+    static func notchRegion(at point: CGPoint, current: SnapNotchRegion?, in regions: [SnapNotchRegion]) -> SnapNotchRegion? {
+        if let current, containsIncludingTopEdge(current.rect, point) {
+            return current
+        }
+        return regions.first { containsIncludingTopEdge($0.triggerRect, point) }
+    }
+
+    /// `CGRect.contains` leaves out the top edge, but a cursor pushed against the top of the
+    /// screen sits exactly on it (y == screen maxY), which made a still cursor count as outside.
+    private static func containsIncludingTopEdge(_ rect: CGRect, _ point: CGPoint) -> Bool {
+        point.x >= rect.minX && point.x < rect.maxX && point.y >= rect.minY && point.y <= rect.maxY
     }
 
     /// True if the final frame is within `tolerance` points of the target on every edge.

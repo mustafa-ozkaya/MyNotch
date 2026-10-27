@@ -76,7 +76,8 @@ extension Defaults.Keys {
     static let releaseName = Key<String>("releaseName", default: "Flying Rabbit 🐇🪽")
     
     // MARK: Behavior
-    static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)
+    // MyNotch: 0.1 s (upstream: 0.3 s) so the notch opens almost as soon as the cursor reaches it.
+    static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.1)
     // MyNotch: off by default (upstream: on); the trackpad tap on hover felt like an unwanted click.
     static let enableHaptics = Key<Bool>("enableHaptics", default: false)
     static let openNotchOnHover = Key<Bool>("openNotchOnHover", default: true)

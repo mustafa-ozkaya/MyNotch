@@ -40,10 +40,6 @@ struct DynamicNotchApp: App {
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
             #if DEBUG
-            // TEMPORARY (spec step 13): remove once window snapping works through the notch.
-            Button("Debug: Snap Window Under Mouse to Left Half (in 3 s)") {
-                Task { await WindowSnapDebug.snapWindowUnderMouseToLeftHalf() }
-            }
             // TEMPORARY (spec step 14): stands in for the Settings toggle until step 16.
             Toggle("Debug: Window Snapping Enabled", isOn: $windowSnappingEnabled)
                 .onChange(of: windowSnappingEnabled) { _, enabled in
@@ -220,13 +216,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    /// Window snapping watches the same regions as the shelf's drag detection, but regardless
-    /// of the "expanded drag detection" setting, which only applies to the shelf.
+    /// Window snapping opens only when the cursor reaches the notch itself, then stays open over
+    /// the same area as the shelf's drag detection. Independent of "expanded drag detection",
+    /// which only applies to the shelf.
     private func updateWindowSnapRegions() {
         let regions = screensWithNotchWindow().compactMap { screen in
-            screen.displayUUID.map { SnapNotchRegion(screenID: $0, rect: notchRegion(for: screen)) }
+            screen.displayUUID.map { uuid in
+                SnapNotchRegion(screenID: uuid, triggerRect: snapTriggerRect(for: screen, uuid: uuid), rect: notchRegion(for: screen))
+            }
         }
         WindowSnapController.shared.setNotchRegions(regions)
+    }
+
+    /// The camera housing on screens with a notch (the gap between the menu bar's two halves,
+    /// where the cursor disappears); the closed notch's area on other screens.
+    private func snapTriggerRect(for screen: NSScreen, uuid: String) -> CGRect {
+        let frame = screen.frame
+        if let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea,
+           screen.safeAreaInsets.top > 0 {
+            let height = screen.safeAreaInsets.top
+            return CGRect(x: left.maxX, y: frame.maxY - height, width: right.minX - left.maxX, height: height)
+        }
+        let size = getClosedNotchSize(screenUUID: uuid)
+        return CGRect(x: frame.midX - size.width / 2, y: frame.maxY - size.height, width: size.width, height: size.height)
     }
 
     private func setupDragDetectorForScreen(_ screen: NSScreen) {
@@ -464,6 +476,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupDragDetectors()
 
         // Window snapping: watches for title-bar drags into the notch while the setting is on.
+        // Same notch lookup as the shelf's handleDragEntersNotchRegion.
+        WindowSnapViewModel.shared.notchViewModel = { [weak self] screenID in
+            guard let self else { return nil }
+            if Defaults[.showOnAllDisplays] {
+                return self.viewModels[screenID]
+            }
+            return self.window?.screen?.displayUUID == screenID ? self.vm : nil
+        }
         WindowSnapController.shared.activate()
 
         // Clipboard history: monitors the pasteboard while the Clipboard tab is enabled.

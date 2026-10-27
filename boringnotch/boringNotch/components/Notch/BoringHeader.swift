@@ -20,7 +20,9 @@ struct BoringHeader: View {
     /// Launcher and Clipboard always need the tab bar to be reachable; the shelf keeps
     /// its original rule (only when it has items, unless "always show tabs" is on).
     private var showsTabBar: Bool {
-        showLauncher || showClipboard || (showShelf && (!tvm.isEmpty || coordinator.alwaysShowTabs))
+        // The window snap panel isn't a tab; hide the bar so clicks can't switch away mid-drag.
+        guard coordinator.currentView != .windowSnap else { return false }
+        return showLauncher || showClipboard || (showShelf && (!tvm.isEmpty || coordinator.alwaysShowTabs))
     }
 
     var body: some View {
