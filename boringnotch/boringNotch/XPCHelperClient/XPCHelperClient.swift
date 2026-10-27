@@ -19,8 +19,9 @@ final class XPCHelperClient: NSObject {
     
     // MARK: - Connection Management (Main Actor Isolated)
     
+    /// Internal (not private) so feature extensions in other files, e.g. window snapping, can use it.
     @MainActor
-    private func ensureRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol> {
+    func ensureRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol> {
         if let existing = remoteService {
             return existing
         }

@@ -38,6 +38,12 @@ struct DynamicNotchApp: App {
                 }
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
+            #if DEBUG
+            // TEMPORARY (spec step 13): remove once window snapping works through the notch.
+            Button("Debug: Snap Window Under Mouse to Left Half (in 3 s)") {
+                Task { await WindowSnapDebug.snapWindowUnderMouseToLeftHalf() }
+            }
+            #endif
             Divider()
             Button("Restart MyNotch") {
                 ApplicationRelauncher.restart()
