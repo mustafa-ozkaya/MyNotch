@@ -891,6 +891,20 @@ struct About: View {
                 HStack(spacing: 30) {
                     Spacer(minLength: 0)
                     Button {
+                        if let url = URL(string: "https://github.com/mustafa-ozkaya/MyNotch") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    } label: {
+                        VStack(spacing: 5) {
+                            Image("Github")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 18)
+                            Text("MyNotch on GitHub")
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    Button {
                         if let url = URL(string: "https://github.com/TheBoredTeam/boring.notch") {
                             NSWorkspace.shared.open(url)
                         }
@@ -910,7 +924,7 @@ struct About: View {
             }
             VStack(spacing: 0) {
                 Divider()
-                Text("MyNotch is a personal fork of boring.notch by The Boring Team, licensed under GPL-3.0.")
+                Text("MyNotch is a fork of boring.notch by The Boring Team, licensed under GPL-3.0.")
                     .foregroundStyle(.secondary)
                     .padding(.top, 5)
                     .padding(.bottom, 7)

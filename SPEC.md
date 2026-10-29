@@ -316,8 +316,22 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
   - W9 Fresh install: toggle "Enable window snapping" → Accessibility prompt; before granting, status shows "Not granted" and nothing happens on drag; after granting, W1 works without restarting.
   - W10 Toggle off → dragging into the notch no longer shows the panel.
 
+## After the plan (2026-10-29)
+Changes made after steps 1–17, from daily use:
+- Clipboard tab opens 300 pt tall (`clipboardOpenNotchSize`; other tabs stay 190 pt); switching tabs while open resizes the notch. The notch window is 320 pt tall to fit it.
+- "Remember last tab" is on by default and takes priority over "open the shelf if it has files", so the notch reopens on the tab it was closed on.
+- The notch stays closed while Mission Control is showing. The helper's `isMissionControlActive` checks for an `mc` child in the Dock's Accessibility tree (confirmed on macOS 27: `["mc"]` while open, `[]` otherwise). Every open path checks it: `ContentView.doOpen` (hover, click, swipe, drops), the two keyboard shortcuts, shelf drags and window snap drags. Without Accessibility it can't be checked and the notch opens as before.
+
+## Public release
+Decisions (2026-10-29): publish on GitHub as **MyNotch**, keeping `com.mustafaozkaya.mynotch`; no paid Apple Developer Program, so releases are ad-hoc signed and not notarized; updates via GitHub Releases only (Sparkle stays off); GPL-3.0 with credit to boring.notch; repo private first, public later.
+
+- **R1 – Release build.** Done: version 1.0.0 (build 1) for the app and helper. `scripts/build-release.sh` builds Release with ad-hoc signing overrides (the project keeps the Personal Team for local builds) and writes `dist/MyNotch-<version>.zip` and `.dmg` (`dist/` is git-ignored). Gatekeeper rejects ad-hoc apps (`spctl` "rejected"), so users bypass it once per version, and Accessibility must be re-granted after each update.
+- **R2 – Cleanup.** Done: root `README.md` (features, install with the Gatekeeper bypass, permissions, re-granting Accessibility, building from source, credits), `SECURITY.md` and `CONTRIBUTING.md`; `LICENSE` and `THIRD_PARTY_LICENSES` moved to the repo root. Removed boring.notch-only files: its `.github/` (workflows, scripts, issue forms, `FUNDING.yml`), `crowdin.yml`, `.devcontainer/`, `updater/appcast.xml` and `Configuration/dmg/`. About page links to the MyNotch repo next to the boring.notch credit. Commit authorship rewritten to the personal address before any push.
+- **R3 – Check.** Install the release zip like a new user (Gatekeeper bypass, grant Accessibility) and check the main features.
+- **R4 – Publish.** Create the private repo `mustafa-ozkaya/MyNotch`, push `main` (not the local `backup/` tag), publish release v1.0.0 with the zip and dmg. Make it public when ready.
+
 ## Open questions
-- Final app name and bundle ID. "MyNotch" / `com.mustafaozkaya.mynotch` is a placeholder (owner: Mustafa; decide before step 1 ideally, since renaming later resets defaults and permissions).
+- ~~Final app name and bundle ID.~~ Resolved 2026-10-29: keep "MyNotch" / `com.mustafaozkaya.mynotch`.
 - ~~Whether reading `changeCount` alone triggers the pasteboard privacy alert.~~ Resolved in step 8 (2026-10-25, macOS 27): no alert appeared at all, neither at launch nor when MyNotch read copied content. Manual check C1's "alert appears" part doesn't apply on this system; C9 (deny in System Settings) still applies if MyNotch shows up in that pane.
 - ~~Whether Accessibility trust granted to MyNotch covers AX calls made from the bundled XPC helper.~~ Resolved in step 13 (2026-10-27, macOS 27): yes. macOS counts the helper's AX calls as MyNotch's (`responsible=com.mustafaozkaya.mynotch` in the `tccd` log), so the single MyNotch entry in Accessibility is enough and no separate helper entry is needed. This needs a stable signature; see the signing note under step 13.
 - Whether macOS's own top-edge drag behavior (tiling / Mission Control) fires reliably when releasing at the notch, and whether the 100 ms delay is enough. Confirm in step 15 (owner: implementer). Step 14 confirmed that the Spaces bar opens while dragging to the top edge, for windows and for files (shelf drags) alike. Turning off "Drag windows to top of screen to enter Mission Control" in Desktop & Dock stops it for both, so the step 16 tip should name that setting. The open part is whether it interferes with the drop and the resize while that setting is on.

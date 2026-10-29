@@ -1,1 +1,4 @@
 .DS_Store
+
+# Release packages from scripts/build-release.sh
+dist/
