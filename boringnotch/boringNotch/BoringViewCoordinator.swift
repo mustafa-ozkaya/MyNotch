@@ -72,7 +72,8 @@ class BoringViewCoordinator: ObservableObject {
         }
     }
 
-    @AppStorage("openLastTabByDefault") var openLastTabByDefault: Bool = false {
+    // MyNotch: on by default (upstream: off), so the notch reopens on the tab it was closed on.
+    @AppStorage("openLastTabByDefault") var openLastTabByDefault: Bool = true {
         didSet {
             if openLastTabByDefault {
                 alwaysShowTabs = true

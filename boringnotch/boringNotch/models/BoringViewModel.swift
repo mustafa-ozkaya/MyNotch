@@ -65,7 +65,21 @@ class BoringViewModel: NSObject, ObservableObject {
             }
             .assign(to: \.anyDropZoneTargeting, on: self)
             .store(in: &cancellables)
-        
+
+        // MyNotch: switching tabs while open resizes the notch (the Clipboard tab is taller).
+        coordinator.$currentView
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] view in
+                guard let self, self.notchState == .open else { return }
+                let size = openSize(showing: view)
+                guard size != self.notchSize else { return }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.82)) {
+                    self.notchSize = size
+                }
+            }
+            .store(in: &cancellables)
+
         setupDetectorObserver()
     }
     
@@ -190,7 +204,7 @@ class BoringViewModel: NSObject, ObservableObject {
     }
 
     func open() {
-        self.notchSize = openNotchSize
+        self.notchSize = openSize(showing: coordinator.currentView)
         self.notchState = .open
         
         // Force music information update when notch is opened
@@ -209,11 +223,14 @@ class BoringViewModel: NSObject, ObservableObject {
         self.coordinator.sneakPeek.show = false
         self.edgeAutoOpenActive = false
 
-        // Set the current view to shelf if it contains files and the user enables openShelfByDefault
-        // Otherwise, if the user has not enabled openLastShelfByDefault, set the view to home
-    if !ShelfStateViewModel.shared.isEmpty && Defaults[.openShelfByDefault] {
+        // MyNotch: "Remember last tab" wins, so the notch reopens where it was closed.
+        // Otherwise the shelf if it has files and openShelfByDefault is on, else Home.
+        if coordinator.openLastTabByDefault {
+            return
+        }
+        if !ShelfStateViewModel.shared.isEmpty && Defaults[.openShelfByDefault] {
             coordinator.currentView = .shelf
-        } else if !coordinator.openLastTabByDefault {
+        } else {
             coordinator.currentView = .home
         }
     }

@@ -14,7 +14,19 @@ let batterySneakSize: CGSize = .init(width: 160, height: 1)
 
 let shadowPadding: CGFloat = 20
 let openNotchSize: CGSize = .init(width: 640, height: 190)
-let windowSize: CGSize = .init(width: openNotchSize.width, height: openNotchSize.height + shadowPadding)
+/// MyNotch: the Clipboard tab opens taller so more history fits without scrolling.
+let clipboardOpenNotchSize: CGSize = .init(width: openNotchSize.width, height: 300)
+/// Fits the tallest open notch. Its transparent parts don't take clicks, so the extra height is harmless.
+let windowSize: CGSize = .init(
+    width: openNotchSize.width,
+    height: max(openNotchSize.height, clipboardOpenNotchSize.height) + shadowPadding
+)
+
+/// Open notch size for a view: taller for the Clipboard tab, the standard size otherwise.
+func openSize(showing view: NotchViews) -> CGSize {
+    view == .clipboard ? clipboardOpenNotchSize : openNotchSize
+}
+
 let cornerRadiusInsets: (opened: (top: CGFloat, bottom: CGFloat), closed: (top: CGFloat, bottom: CGFloat)) = (opened: (top: 19, bottom: 24), closed: (top: 6, bottom: 14))
 
 enum MusicPlayerImageSizes {
