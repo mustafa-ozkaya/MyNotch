@@ -4,6 +4,7 @@
 //
 
 import CoreGraphics
+import Foundation
 
 /// A place a dragged window can snap to. New layouts (thirds, quarters…) are added here.
 enum SnapLayout: String, CaseIterable, Codable, Identifiable {
@@ -11,7 +12,8 @@ enum SnapLayout: String, CaseIterable, Codable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    /// Localizable, so the names are picked up by the string catalog.
+    var label: LocalizedStringResource {
         switch self {
         case .leftHalf: return "Left Half"
         case .fill: return "Fill"

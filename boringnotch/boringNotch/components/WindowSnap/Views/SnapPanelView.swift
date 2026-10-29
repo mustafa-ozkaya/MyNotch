@@ -18,10 +18,10 @@ struct SnapPanelView: View {
                     SnapTarget(layout: layout, isHovered: snap.hoveredLayout == layout)
                 }
             }
-            .opacity(snap.message == nil ? 1 : 0.15)
+            .opacity(snap.showsResizeFailure ? 0.15 : 1)
 
-            if let message = snap.message {
-                Label(message, systemImage: "exclamationmark.triangle.fill")
+            if snap.showsResizeFailure {
+                Label("Couldn't resize this window", systemImage: "exclamationmark.triangle.fill")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.9))
                     .transition(.opacity)
@@ -30,7 +30,7 @@ struct SnapPanelView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 20)
         .animation(.spring(response: 0.28, dampingFraction: 0.8), value: snap.hoveredLayout)
-        .animation(.smooth(duration: 0.2), value: snap.message)
+        .animation(.smooth(duration: 0.2), value: snap.showsResizeFailure)
     }
 }
 

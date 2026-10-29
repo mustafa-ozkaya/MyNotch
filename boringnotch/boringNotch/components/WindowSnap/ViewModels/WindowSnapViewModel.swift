@@ -15,8 +15,8 @@ final class WindowSnapViewModel: ObservableObject {
 
     @Published private(set) var isActive = false
     @Published private(set) var hoveredLayout: SnapLayout?
-    /// Shown in the panel briefly when a window couldn't be resized.
-    @Published private(set) var message: String?
+    /// True briefly when a window couldn't be resized, so the panel says so before closing.
+    @Published private(set) var showsResizeFailure = false
 
     /// Looks up the notch view model for a screen ID; set by the app delegate.
     var notchViewModel: ((_ screenID: String) -> BoringViewModel?)?
@@ -122,7 +122,7 @@ final class WindowSnapViewModel: ObservableObject {
             if !matched {
                 // Fixed-size or minimum-size windows: the app clamps the frame. No retry.
                 self.preview.hide()
-                self.message = "Couldn't resize this window"
+                self.showsResizeFailure = true
                 try? await Task.sleep(for: failureMessageDuration)
             }
             self.resizeTask = nil
@@ -169,7 +169,7 @@ final class WindowSnapViewModel: ObservableObject {
         let wasActive = isActive
         isActive = false
         hoveredLayout = nil
-        message = nil
+        showsResizeFailure = false
         targetScreenID = nil
         guard wasActive, let notch = targetNotch else { return }
         targetNotch = nil

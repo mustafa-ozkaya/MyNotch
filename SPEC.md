@@ -280,6 +280,7 @@ Turn a personal fork of boring.notch ("MyNotch") into a productivity notch. Add 
     - Done 2026-10-27: the pane is at `components/WindowSnap/Settings/WindowSnapSettingsView.swift` (a folder-synchronized group, like Clipboard's settings) rather than `components/Settings/`. The status row checks `isAccessibilityAuthorized()` every 2 s while the pane is open, instead of using the shared monitor that the HUD pane starts and stops. The Mission Control tip names the Desktop & Dock setting and mentions shelf drags. The temporary "Debug: Window Snapping Enabled" menu toggle is removed.
     - Manually checked: W10. W9 skipped at the user's request (it needs Accessibility revoked and granted again).
 17. **Cleanup.** New strings in `Localizable.xcstrings`. *Check:* build with no new warnings; all tests pass.
+    - Done 2026-10-29: `SnapLayout.label` is a `LocalizedStringResource`, and the "Couldn't resize this window" text is a literal in `SnapPanelView` (the view model only publishes `showsResizeFailure`), so every window-snapping string is extractable. As in step 11, `Localizable.xcstrings` itself is filled in by Xcode the next time the project is built in the IDE. Build has no new warnings; 77 tests pass.
 
 ## Verification
 - **Unit tests (`MyNotchTests`, Swift Testing), run with `RunAllTests`:**
