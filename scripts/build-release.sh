@@ -6,6 +6,11 @@
 # notarized). Local development builds keep using the Personal Team set in the Xcode project;
 # the overrides below only apply to this script's build.
 #
+# Hardened runtime is off for this build: it enforces library validation, which only lets the app
+# load frameworks signed by the same team. Ad-hoc signatures have no team, so dyld refuses the
+# embedded frameworks (MediaRemoteAdapter, Lottie, Sparkle) and the app dies at launch.
+# Hardened runtime is only required for notarization, which an ad-hoc release can't get anyway.
+#
 # Usage: scripts/build-release.sh
 # Output: dist/MyNotch-<version>.zip and dist/MyNotch-<version>.dmg
 #
@@ -27,6 +32,7 @@ xcodebuild build \
     CODE_SIGN_STYLE=Manual \
     DEVELOPMENT_TEAM= \
     PROVISIONING_PROFILE_SPECIFIER= \
+    ENABLE_HARDENED_RUNTIME=NO \
     > "$DERIVED.log" 2>&1 || {
         grep -E "error:" "$DERIVED.log" | sort -u
         echo "✗ Build failed. Full log: $DERIVED.log"

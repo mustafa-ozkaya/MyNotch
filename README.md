@@ -27,8 +27,14 @@ Requires macOS 14 or later. Built and tested on macOS 27 on a MacBook with a not
 
 ### Allowing MyNotch to open
 
-MyNotch isn't signed with an Apple Developer ID or notarized by Apple, so macOS blocks it the
-first time with a message that it can't check the app for malicious software. Pick one:
+MyNotch isn't signed with an Apple Developer ID or notarized by Apple, so the first time you open
+it, macOS shows **"MyNotch" Not Opened: Apple could not verify "MyNotch" is free of malware…**
+Click **Done**, not **Move to Trash** (that deletes the app). Done doesn't open MyNotch yet; pick one:
+
+**System Settings:** go to **System Settings › Privacy & Security** and scroll all the way down,
+past **Security**. Next to **"MyNotch" was blocked to protect your Mac**, click **Open Anyway**,
+confirm with your password or Touch ID, and click **Open Anyway** again. (The message only shows for
+a while after the blocked attempt; if it's gone, open MyNotch once more and click Done.)
 
 **Terminal (always works):**
 
@@ -36,8 +42,7 @@ first time with a message that it can't check the app for malicious software. Pi
 xattr -dr com.apple.quarantine /Applications/MyNotch.app
 ```
 
-**System Settings:** try to open MyNotch once, then go to **System Settings › Privacy & Security**,
-scroll down to the message about MyNotch and click **Open Anyway**.
+Then open MyNotch normally.
 
 Repeat this after installing each new version.
 
