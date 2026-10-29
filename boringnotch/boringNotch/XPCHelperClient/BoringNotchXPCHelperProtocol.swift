@@ -30,5 +30,8 @@ import Foundation
     func setWindowFrame(_ token: NSNumber, _ frame: [NSNumber], with reply: @escaping ([NSNumber]?) -> Void)
     /// Forgets a window token.
     func releaseWindow(_ token: NSNumber)
+    /// True while Mission Control is showing (MyNotch keeps the notch closed then).
+    /// Replies false if Accessibility isn't granted, since it can't be checked without it.
+    func isMissionControlActive(with reply: @escaping (Bool) -> Void)
 }
 

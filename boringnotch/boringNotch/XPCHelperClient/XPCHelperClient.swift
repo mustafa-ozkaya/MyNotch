@@ -244,6 +244,27 @@ final class XPCHelperClient: NSObject {
     }
 }
 
+// MARK: - Mission Control (MyNotch)
+
+/// Main-actor isolated like the window-snapping calls: callers are, and the XPC service
+/// object isn't Sendable.
+@MainActor
+extension XPCHelperClient {
+    /// True while Mission Control is showing. False if it can't be checked (no Accessibility, helper down).
+    func isMissionControlActive() async -> Bool {
+        do {
+            let service = ensureRemoteService()
+            return try await service.withContinuation { service, continuation in
+                service.isMissionControlActive { active in
+                    continuation.resume(returning: active)
+                }
+            }
+        } catch {
+            return false
+        }
+    }
+}
+
 extension Notification.Name {
     static let accessibilityAuthorizationChanged = Notification.Name("accessibilityAuthorizationChanged")
 }

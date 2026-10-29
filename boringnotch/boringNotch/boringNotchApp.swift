@@ -261,12 +261,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func handleDragEntersNotchRegion(onScreen screen: NSScreen) {
         guard let uuid = screen.displayUUID else { return }
-        
-        if Defaults[.showOnAllDisplays], let viewModel = viewModels[uuid] {
-            viewModel.open()
-            coordinator.currentView = .shelf
+
+        let viewModel: BoringViewModel
+        if Defaults[.showOnAllDisplays], let screenViewModel = viewModels[uuid] {
+            viewModel = screenViewModel
         } else if !Defaults[.showOnAllDisplays], let windowScreen = window?.screen, screen == windowScreen {
-            vm.open()
+            viewModel = vm
+        } else {
+            return
+        }
+        // MyNotch: the notch stays closed while Mission Control is showing.
+        Task { @MainActor in
+            guard !(await XPCHelperClient.shared.isMissionControlActive()) else { return }
+            viewModel.open()
             coordinator.currentView = .shelf
         }
     }
@@ -416,6 +423,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                 switch viewModel.notchState {
                 case .closed:
+                    // MyNotch: the notch stays closed while Mission Control is showing.
+                    guard !(await XPCHelperClient.shared.isMissionControlActive()) else { return }
                     await MainActor.run {
                         viewModel.open()
                     }
@@ -449,8 +458,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if viewModel.notchState == .open && self.coordinator.currentView == .clipboard {
                 viewModel.close()
             } else {
-                self.coordinator.currentView = .clipboard
-                viewModel.open()
+                // MyNotch: the notch stays closed while Mission Control is showing.
+                Task { @MainActor in
+                    guard !(await XPCHelperClient.shared.isMissionControlActive()) else { return }
+                    self.coordinator.currentView = .clipboard
+                    viewModel.open()
+                }
             }
         }
 

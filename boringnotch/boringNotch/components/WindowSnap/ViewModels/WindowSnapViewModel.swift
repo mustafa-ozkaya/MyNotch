@@ -28,6 +28,7 @@ final class WindowSnapViewModel: ObservableObject {
     private var targetScreenID: String?
     private var targetNotch: BoringViewModel?
     private var previousView: NotchViews = .home
+    private var enterTask: Task<Void, Never>?
     private var exitTask: Task<Void, Never>?
     private var resizeTask: Task<Void, Never>?
     private var zoneViews: [SnapLayout: WeakView] = [:]
@@ -51,6 +52,20 @@ final class WindowSnapViewModel: ObservableObject {
         exitTask = nil
         guard resizeTask == nil else { return }
         if isActive, targetScreenID == screenID { return }
+
+        // The notch stays closed while Mission Control is showing. The check is async, so a
+        // drag that exits, drops or cancels before it answers cancels the pending open.
+        enterTask?.cancel()
+        enterTask = Task { [weak self] in
+            let missionControl = await XPCHelperClient.shared.isMissionControlActive()
+            guard let self, !Task.isCancelled else { return }
+            self.enterTask = nil
+            guard !missionControl else { return }
+            self.activate(screenID: screenID)
+        }
+    }
+
+    private func activate(screenID: String) {
         if isActive { deactivate() }  // moved straight from one screen's notch to another's
 
         guard let notch = notchViewModel?(screenID) else { return }
@@ -80,6 +95,7 @@ final class WindowSnapViewModel: ObservableObject {
     }
 
     func dragExited() {
+        cancelPendingEnter()
         guard isActive, resizeTask == nil else { return }
         exitTask?.cancel()
         exitTask = Task { [weak self, exitDelay] in
@@ -91,6 +107,7 @@ final class WindowSnapViewModel: ObservableObject {
 
     /// The detector hands over `window`; it's released here once the resize is done.
     func dropped(at point: CGPoint, window: SnapWindowHandle) {
+        cancelPendingEnter()
         exitTask?.cancel()
         exitTask = nil
         guard resizeTask == nil else {
@@ -131,6 +148,7 @@ final class WindowSnapViewModel: ObservableObject {
     }
 
     func dragCancelled() {
+        cancelPendingEnter()
         exitTask?.cancel()
         exitTask = nil
         guard resizeTask == nil else { return }
@@ -158,6 +176,11 @@ final class WindowSnapViewModel: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    private func cancelPendingEnter() {
+        enterTask?.cancel()
+        enterTask = nil
+    }
 
     private var targetScreen: NSScreen? {
         targetScreenID.flatMap { NSScreen.screen(withUUID: $0) }

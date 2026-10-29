@@ -512,9 +512,14 @@ struct ContentView: View {
         }
     }
 
+    /// Hover, click, swipe-down and drops all open the notch through here.
+    /// MyNotch: stays closed while Mission Control is showing.
     private func doOpen() {
-        withAnimation(animationSpring) {
-            vm.open()
+        Task { @MainActor in
+            guard !(await XPCHelperClient.shared.isMissionControlActive()) else { return }
+            withAnimation(animationSpring) {
+                vm.open()
+            }
         }
     }
 
